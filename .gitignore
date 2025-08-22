@@ -1,0 +1,77 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Build output
+/dist/
+/build/
+
+# Test output
+/test-results/
+/coverage/
+
+# Benchmark results
+/benchmark-results/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Generated documentation
+/doc/
+
+# Platform specific
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor backup files
+*.bak
+*.orig
+*.rej
+
+# Profiling data
+*.prof
