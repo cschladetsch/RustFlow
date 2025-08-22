@@ -1,8 +1,6 @@
 // Coroutine implementation - placeholder for now
 use async_trait::async_trait;
 use std::any::Any;
-use std::future::Future as StdFuture;
-use std::pin::Pin;
 
 use crate::traits::{Generator, Steppable, Transient};
 use crate::types::{GeneratorState, TransientId};
@@ -52,6 +50,19 @@ impl Transient for Coroutine {
         self.state = GeneratorState::Completed;
     }
     
+    async fn step(&mut self) -> Result<()> {
+        self.step_number += 1;
+        Ok(())
+    }
+    
+    async fn resume(&mut self) {
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        self.state = GeneratorState::Suspended;
+    }
+    
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -62,12 +73,7 @@ impl Transient for Coroutine {
 }
 
 #[async_trait]
-impl Steppable for Coroutine {
-    async fn step(&mut self) -> Result<()> {
-        self.step_number += 1;
-        Ok(())
-    }
-}
+impl Steppable for Coroutine {}
 
 #[async_trait]
 impl Generator for Coroutine {
@@ -83,14 +89,6 @@ impl Generator for Coroutine {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&())
-    }
-    
-    async fn resume(&mut self) {
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {}

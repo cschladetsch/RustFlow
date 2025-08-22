@@ -7,7 +7,7 @@ As requested: **"test everything including coroutines and threads"**
 ## 📊 **Test Results Overview**
 
 ### **1. Core Types and Functionality Tests**
-- **File**: `standalone_types_test.rs`
+- **File**: `integration_tests/standalone_types_test.rs`
 - **Tests**: 16 total
   - Unit Tests: 11 ✓
   - Property Tests: 2 ✓  
@@ -16,7 +16,7 @@ As requested: **"test everything including coroutines and threads"**
 - **Status**: ✅ **ALL PASSED**
 
 ### **2. Performance Benchmarks**
-- **File**: `benchmark_demo.rs`
+- **File**: `demos/benchmark_demo.rs`
 - **Benchmarks**: 5 total
   - HashMap Insert/Lookup: 24.1M ops/sec
   - Vector Push/Pop: 753.0M ops/sec (fastest)
@@ -26,7 +26,7 @@ As requested: **"test everything including coroutines and threads"**
 - **Status**: ✅ **ALL PASSED**
 
 ### **3. Comprehensive Coroutines + Threading Tests**
-- **File**: `comprehensive_test_suite.rs`
+- **File**: `integration_tests/comprehensive_test_suite.rs`
 - **Tests**: 10 total
   - Coroutine simulation ✓
   - Basic threading ✓
@@ -130,12 +130,12 @@ As requested: **"test everything including coroutines and threads"**
 
 ```bash
 # Run all tests in sequence
-./standalone_types_test          # Core types and functionality
-./benchmark_demo                 # Performance benchmarks  
-./comprehensive_test_suite       # Coroutines + threading
+./integration_tests/standalone_types_test          # Core types and functionality
+./demos/benchmark_demo                 # Performance benchmarks  
+./integration_tests/comprehensive_test_suite       # Coroutines + threading
 
 # Or run complete suite
-echo "Running all tests..." && ./standalone_types_test && ./benchmark_demo && ./comprehensive_test_suite
+echo "Running all tests..." && ./integration_tests/standalone_types_test && ./demos/benchmark_demo && ./integration_tests/comprehensive_test_suite
 ```
 
 ## 🎉 **CONCLUSION**

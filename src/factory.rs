@@ -2,7 +2,11 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
-use crate::flow::*;
+use crate::flow::{
+    Barrier, Boundary, Channel, Coroutine, Future, Group, Node, 
+    Periodic, Sequence, TimedBarrier, TimedFuture, TimedTimer, 
+    TimedTrigger, Timer, Trigger
+};
 use crate::traits::Transient;
 
 pub struct Factory;
@@ -12,48 +16,76 @@ impl Factory {
         Self
     }
     
-    pub fn group(&self) -> Arc<RwLock<group::Group>> {
-        Arc::new(RwLock::new(group::Group::new()))
+    // Basic components
+    pub fn group(&self) -> Arc<RwLock<Group>> {
+        Arc::new(RwLock::new(Group::new()))
     }
     
-    pub fn node(&self) -> Arc<RwLock<node::Node>> {
-        Arc::new(RwLock::new(node::Node::new()))
+    pub fn node(&self) -> Arc<RwLock<Node>> {
+        Arc::new(RwLock::new(Node::new()))
     }
     
-    pub fn sequence(&self) -> Arc<RwLock<sequence::Sequence>> {
-        Arc::new(RwLock::new(sequence::Sequence::new()))
+    pub fn sequence(&self) -> Arc<RwLock<Sequence>> {
+        Arc::new(RwLock::new(Sequence::new()))
     }
     
-    pub fn sequence_with_steps(&self, steps: Vec<Arc<RwLock<dyn Transient>>>) -> Arc<RwLock<sequence::Sequence>> {
-        Arc::new(RwLock::new(sequence::Sequence::with_steps(steps)))
+    pub fn sequence_with_steps(&self, steps: Vec<Arc<RwLock<dyn Transient>>>) -> Arc<RwLock<Sequence>> {
+        Arc::new(RwLock::new(Sequence::with_steps(steps)))
     }
     
-    pub fn barrier(&self) -> Arc<RwLock<barrier::Barrier>> {
-        Arc::new(RwLock::new(barrier::Barrier::new()))
+    pub fn barrier(&self) -> Arc<RwLock<Barrier>> {
+        Arc::new(RwLock::new(Barrier::new()))
     }
     
-    pub fn future<T: Send + Sync + Clone + 'static>(&self) -> Arc<RwLock<future::Future<T>>> {
-        Arc::new(RwLock::new(future::Future::new()))
+    // Timers
+    pub fn timer(&self, interval: Duration) -> Arc<RwLock<Timer>> {
+        Arc::new(RwLock::new(Timer::new(interval)))
     }
     
-    pub fn future_with_value<T: Send + Sync + Clone + 'static>(&self, value: T) -> Arc<RwLock<future::Future<T>>> {
-        Arc::new(RwLock::new(future::Future::with_value(value)))
+    pub fn timed_timer(&self, interval: Duration, behavior: crate::flow::TimedTimerBehavior) -> Arc<RwLock<TimedTimer>> {
+        Arc::new(RwLock::new(TimedTimer::new(interval, behavior)))
     }
     
-    pub fn timed_future<T: Send + Sync + Clone + 'static>(&self, timeout: Duration) -> Arc<RwLock<future::TimedFuture<T>>> {
-        Arc::new(RwLock::new(future::TimedFuture::new(timeout)))
+    pub fn periodic(&self, period: Duration) -> Arc<RwLock<Periodic>> {
+        Arc::new(RwLock::new(Periodic::new(period)))
     }
     
-    pub fn timer(&self, interval: Duration) -> Arc<RwLock<timer::Timer>> {
-        Arc::new(RwLock::new(timer::Timer::new(interval)))
+    // Triggers
+    pub fn trigger(&self) -> Arc<RwLock<Trigger>> {
+        Arc::new(RwLock::new(Trigger::new()))
     }
     
-    pub fn channel<T: Send + Sync + 'static>(&self) -> Arc<RwLock<channel::Channel<T>>> {
-        Arc::new(RwLock::new(channel::Channel::new()))
+    pub fn timed_trigger(&self, trigger_type: crate::flow::TimedTriggerType, timeout: Duration) -> Arc<RwLock<TimedTrigger>> {
+        Arc::new(RwLock::new(TimedTrigger::new(trigger_type, timeout)))
     }
     
-    pub fn coroutine(&self) -> Arc<RwLock<coroutine::Coroutine>> {
-        Arc::new(RwLock::new(coroutine::Coroutine::new()))
+    // Barriers
+    pub fn timed_barrier(&self, participants: Vec<String>, timeout: Duration) -> Arc<RwLock<TimedBarrier>> {
+        Arc::new(RwLock::new(TimedBarrier::new(participants, timeout)))
+    }
+    
+    // Boundaries and guards
+    pub fn boundary(&self, boundary_type: crate::flow::BoundaryType) -> Arc<RwLock<Boundary>> {
+        Arc::new(RwLock::new(Boundary::new(boundary_type)))
+    }
+    
+    // Futures
+    pub fn future<T: Send + Sync + Clone + 'static>(&self) -> Arc<RwLock<Future<T>>> {
+        Arc::new(RwLock::new(Future::new()))
+    }
+    
+    pub fn timed_future<T: Send + Sync + Clone + 'static>(&self, timeout: Duration) -> Arc<RwLock<TimedFuture<T>>> {
+        Arc::new(RwLock::new(TimedFuture::new(timeout)))
+    }
+    
+    // Channels
+    pub fn channel<T: Send + Sync + 'static>(&self) -> Arc<RwLock<Channel<T>>> {
+        Arc::new(RwLock::new(Channel::new()))
+    }
+    
+    // Coroutines
+    pub fn coroutine(&self) -> Arc<RwLock<Coroutine>> {
+        Arc::new(RwLock::new(Coroutine::new()))
     }
 }
 

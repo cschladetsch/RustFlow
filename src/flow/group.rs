@@ -96,6 +96,33 @@ impl Transient for Group {
         self.state = GeneratorState::Completed;
     }
     
+    async fn step(&mut self) -> Result<()> {
+        if !self.is_active() {
+            return Ok(());
+        }
+        
+        self.step_number += 1;
+        trace!("Group {} step #{}", self.id, self.step_number);
+        
+        for item in &self.contents {
+            if let Ok(mut transient) = item.try_write() {
+                transient.step().await?;
+            }
+        }
+        
+        Ok(())
+    }
+    
+    async fn resume(&mut self) {
+        debug!("Group {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        debug!("Group {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -106,18 +133,7 @@ impl Transient for Group {
 }
 
 #[async_trait]
-impl Steppable for Group {
-    async fn step(&mut self) -> Result<()> {
-        if !self.is_active() {
-            return Ok(());
-        }
-        
-        self.step_number += 1;
-        trace!("Group {} step #{}", self.id, self.step_number);
-        
-        Ok(())
-    }
-}
+impl Steppable for Group {}
 
 #[async_trait]
 impl Generator for Group {
@@ -133,16 +149,6 @@ impl Generator for Group {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&())
-    }
-    
-    async fn resume(&mut self) {
-        debug!("Group {} resuming", self.id);
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        debug!("Group {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {

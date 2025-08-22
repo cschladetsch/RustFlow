@@ -106,17 +106,6 @@ impl Transient for Sequence {
         self.state = GeneratorState::Completed;
     }
     
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-#[async_trait]
-impl Steppable for Sequence {
     async fn step(&mut self) -> Result<()> {
         if !self.is_active() {
             return Ok(());
@@ -133,28 +122,52 @@ impl Steppable for Sequence {
         }
         
         let current = &self.steps[self.current_step];
+        let mut should_advance = false;
         
         if let Ok(mut transient) = current.try_write() {
             if transient.is_completed() {
-                self.current_step += 1;
-                debug!("Sequence {} advancing to step {}", self.id, self.current_step + 1);
-                
-                if self.current_step >= self.steps.len() {
-                    self.complete().await;
+                should_advance = true;
+            } else {
+                // Simplified stepping - just step the transient
+                if let Err(e) = transient.step().await {
+                    debug!("Error stepping sequence step {}: {}", self.current_step, e);
                 }
-                
-                return Ok(());
             }
+        }
+        
+        if should_advance {
+            self.current_step += 1;
+            debug!("Sequence {} advancing to step {}", self.id, self.current_step + 1);
             
-            // Simplified stepping - just step the transient
-            if let Err(e) = transient.step().await {
-                debug!("Error stepping sequence step {}: {}", self.current_step, e);
+            if self.current_step >= self.steps.len() {
+                self.complete().await;
             }
         }
         
         Ok(())
     }
+    
+    async fn resume(&mut self) {
+        debug!("Sequence {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        debug!("Sequence {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
+
+#[async_trait]
+impl Steppable for Sequence {}
 
 #[async_trait]
 impl Generator for Sequence {
@@ -170,30 +183,6 @@ impl Generator for Sequence {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&())
-    }
-    
-    async fn resume(&mut self) {
-        debug!("Sequence {} resuming", self.id);
-        self.state = GeneratorState::Running;
-        
-        // Try to resume current step
-        if let Some(current) = self.current_step() {
-            if let Ok(mut transient) = current.try_write() {
-                transient.resume().await;
-            }
-        }
-    }
-    
-    async fn suspend(&mut self) {
-        debug!("Sequence {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
-        
-        // Try to suspend current step
-        if let Some(current) = self.current_step() {
-            if let Ok(mut transient) = current.try_write() {
-                transient.suspend().await;
-            }
-        }
     }
     
     async fn pre(&mut self) {

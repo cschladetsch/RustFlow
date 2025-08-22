@@ -8,7 +8,7 @@ This document summarizes the **comprehensive testing framework** created for Rus
 
 ### **1. Unit Tests** ✅ WORKING
 - **Location**: `src/types.rs` (embedded tests)
-- **Standalone Demo**: `standalone_types_test.rs` 
+- **Standalone Demo**: `integration_tests/standalone_types_test.rs` 
 - **Coverage**: Core types, data structures, basic functionality
 - **Results**: ✅ 16/16 tests passed
 
@@ -73,7 +73,7 @@ This document summarizes the **comprehensive testing framework** created for Rus
 
 ### **7. Benchmark Suite** ✅ CREATED + DEMONSTRATED
 - **Location**: `benches/flow_benchmarks.rs`
-- **Demo**: `benchmark_demo.rs`
+- **Demo**: `demos/benchmark_demo.rs`
 - **Coverage**: Performance measurement
 - **Results**: ✅ 5 benchmarks completed successfully
 
@@ -112,11 +112,11 @@ Vector Push/Pop                    0ms          100.0K          745.8M
 ### **Demonstrated Working Tests**
 | Test Type | Count | Status | Location |
 |-----------|--------|---------|-----------|
-| Unit Tests | 11 | ✅ PASSING | `standalone_types_test.rs` |
-| Property Tests | 2 | ✅ PASSING | `standalone_types_test.rs` |
-| Stress Tests | 1 | ✅ PASSING | `standalone_types_test.rs` |
-| Performance Tests | 2 | ✅ PASSING | `standalone_types_test.rs` |
-| Benchmarks | 5 | ✅ PASSING | `benchmark_demo.rs` |
+| Unit Tests | 11 | ✅ PASSING | `integration_tests/standalone_types_test.rs` |
+| Property Tests | 2 | ✅ PASSING | `integration_tests/standalone_types_test.rs` |
+| Stress Tests | 1 | ✅ PASSING | `integration_tests/standalone_types_test.rs` |
+| Performance Tests | 2 | ✅ PASSING | `integration_tests/standalone_types_test.rs` |
+| Benchmarks | 5 | ✅ PASSING | `demos/benchmark_demo.rs` |
 | **Total** | **21** | **✅ ALL PASSING** | **Multiple files** |
 
 ### **Created Test Framework**
@@ -162,10 +162,10 @@ This test suite provides functionality equivalent to:
 ### **Running Tests**
 ```bash
 # Run working demonstration tests
-rustc standalone_types_test.rs && ./standalone_types_test
+rustc integration_tests/standalone_types_test.rs && ./standalone_types_test
 
 # Run performance benchmarks  
-rustc benchmark_demo.rs -O && ./benchmark_demo
+rustc demos/benchmark_demo.rs -O && ./benchmark_demo
 
 # Run full test suite (when library compiles)
 cargo test                    # All tests

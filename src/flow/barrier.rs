@@ -80,17 +80,6 @@ impl Transient for Barrier {
         self.state = GeneratorState::Completed;
     }
     
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-#[async_trait]
-impl Steppable for Barrier {
     async fn step(&mut self) -> Result<()> {
         if !self.is_active() {
             return Ok(());
@@ -106,7 +95,28 @@ impl Steppable for Barrier {
         
         Ok(())
     }
+    
+    async fn resume(&mut self) {
+        debug!("Barrier {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        debug!("Barrier {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
+
+#[async_trait]
+impl Steppable for Barrier {}
 
 #[async_trait]
 impl Generator for Barrier {
@@ -122,16 +132,6 @@ impl Generator for Barrier {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&())
-    }
-    
-    async fn resume(&mut self) {
-        debug!("Barrier {} resuming", self.id);
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        debug!("Barrier {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {

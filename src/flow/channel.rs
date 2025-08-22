@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use std::any::Any;
 use tokio::sync::mpsc;
-use tracing::{debug, trace};
+use tracing::debug;
 
 use crate::traits::{Generator, Steppable, Transient};
 use crate::types::{GeneratorState, TransientId};
@@ -67,17 +67,6 @@ impl<T: Send + Sync + 'static> Transient for Channel<T> {
         self.state = GeneratorState::Completed;
     }
     
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-#[async_trait]
-impl<T: Send + Sync + 'static> Steppable for Channel<T> {
     async fn step(&mut self) -> Result<()> {
         if !self.is_active() {
             return Ok(());
@@ -91,7 +80,26 @@ impl<T: Send + Sync + 'static> Steppable for Channel<T> {
         
         Ok(())
     }
+    
+    async fn resume(&mut self) {
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        self.state = GeneratorState::Suspended;
+    }
+    
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
+
+#[async_trait]
+impl<T: Send + Sync + 'static> Steppable for Channel<T> {}
 
 #[async_trait]
 impl<T: Send + Sync + 'static> Generator for Channel<T> {
@@ -107,14 +115,6 @@ impl<T: Send + Sync + 'static> Generator for Channel<T> {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&self.last_value)
-    }
-    
-    async fn resume(&mut self) {
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {}

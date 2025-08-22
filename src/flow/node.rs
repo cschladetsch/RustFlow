@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, trace};
 
 use crate::flow::group::Group;
 use crate::traits::{Generator, Steppable, Transient};
@@ -73,6 +72,18 @@ impl Transient for Node {
         self.group.complete().await;
     }
     
+    async fn step(&mut self) -> Result<()> {
+        self.group.step().await
+    }
+    
+    async fn resume(&mut self) {
+        self.group.resume().await;
+    }
+    
+    async fn suspend(&mut self) {
+        self.group.suspend().await;
+    }
+    
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -83,41 +94,7 @@ impl Transient for Node {
 }
 
 #[async_trait]
-impl Steppable for Node {
-    async fn step(&mut self) -> Result<()> {
-        if !self.is_active() {
-            return Ok(());
-        }
-        
-        trace!("Node {} stepping {} contents", self.id(), self.contents().len());
-        
-        let mut completed_ids = Vec::new();
-        
-        // Simplified stepping - just step the transients directly
-        for content in self.contents() {
-            if let Ok(mut transient) = content.try_write() {
-                if transient.is_completed() {
-                    completed_ids.push(transient.id());
-                    continue;
-                }
-                
-                // Try to step if it's steppable - simplified approach
-                if let Err(e) = transient.step().await {
-                    debug!("Error stepping transient {}: {}", transient.id(), e);
-                }
-            }
-        }
-        
-        // Remove completed transients
-        for id in completed_ids {
-            self.remove(id).await;
-        }
-        
-        self.group.step().await?;
-        
-        Ok(())
-    }
-}
+impl Steppable for Node {}
 
 #[async_trait]
 impl Generator for Node {
@@ -133,14 +110,6 @@ impl Generator for Node {
     
     fn value(&self) -> Option<&Self::Output> {
         self.group.value()
-    }
-    
-    async fn resume(&mut self) {
-        self.group.resume().await;
-    }
-    
-    async fn suspend(&mut self) {
-        self.group.suspend().await;
     }
     
     async fn pre(&mut self) {

@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use std::any::Any;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{watch, RwLock};
+use tokio::sync::watch;
 use tracing::{debug, trace};
 
 use crate::traits::{Generator, Steppable, Transient};
@@ -107,17 +106,6 @@ impl<T: Send + Sync + Clone + 'static> Transient for Future<T> {
         self.state = GeneratorState::Completed;
     }
     
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
-
-#[async_trait]
-impl<T: Send + Sync + Clone + 'static> Steppable for Future<T> {
     async fn step(&mut self) -> Result<()> {
         if !self.is_active() {
             return Ok(());
@@ -128,7 +116,28 @@ impl<T: Send + Sync + Clone + 'static> Steppable for Future<T> {
         
         Ok(())
     }
+    
+    async fn resume(&mut self) {
+        debug!("Future {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        debug!("Future {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
+
+#[async_trait]
+impl<T: Send + Sync + Clone + 'static> Steppable for Future<T> {}
 
 #[async_trait]
 impl<T: Send + Sync + Clone + 'static> Generator for Future<T> {
@@ -144,16 +153,6 @@ impl<T: Send + Sync + Clone + 'static> Generator for Future<T> {
     
     fn value(&self) -> Option<&Self::Output> {
         self.value.as_ref()
-    }
-    
-    async fn resume(&mut self) {
-        debug!("Future {} resuming", self.id);
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        debug!("Future {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {
@@ -231,6 +230,23 @@ impl<T: Send + Sync + Clone + 'static> Transient for TimedFuture<T> {
         self.future.complete().await;
     }
     
+    async fn step(&mut self) -> Result<()> {
+        if self.is_timed_out() && self.future.is_active() {
+            debug!("TimedFuture {} timed out", self.id());
+            self.future.complete().await;
+        }
+        
+        self.future.step().await
+    }
+    
+    async fn resume(&mut self) {
+        self.future.resume().await;
+    }
+    
+    async fn suspend(&mut self) {
+        self.future.suspend().await;
+    }
+    
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -241,16 +257,7 @@ impl<T: Send + Sync + Clone + 'static> Transient for TimedFuture<T> {
 }
 
 #[async_trait]
-impl<T: Send + Sync + Clone + 'static> Steppable for TimedFuture<T> {
-    async fn step(&mut self) -> Result<()> {
-        if self.is_timed_out() && self.future.is_active() {
-            debug!("TimedFuture {} timed out", self.id());
-            self.future.complete().await;
-        }
-        
-        self.future.step().await
-    }
-}
+impl<T: Send + Sync + Clone + 'static> Steppable for TimedFuture<T> {}
 
 #[async_trait]
 impl<T: Send + Sync + Clone + 'static> Generator for TimedFuture<T> {
@@ -270,14 +277,6 @@ impl<T: Send + Sync + Clone + 'static> Generator for TimedFuture<T> {
     
     fn value(&self) -> Option<&Self::Output> {
         self.future.value()
-    }
-    
-    async fn resume(&mut self) {
-        self.future.resume().await;
-    }
-    
-    async fn suspend(&mut self) {
-        self.future.suspend().await;
     }
     
     async fn pre(&mut self) {

@@ -4,16 +4,7 @@ pub mod runtime;
 pub mod traits;
 pub mod types;
 
-pub mod flow {
-    pub mod barrier;
-    pub mod channel;
-    pub mod coroutine;
-    pub mod future;
-    pub mod group;
-    pub mod node;
-    pub mod sequence;
-    pub mod timer;
-}
+pub mod flow;
 
 pub mod factory;
 pub mod logger;

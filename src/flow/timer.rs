@@ -68,6 +68,35 @@ impl Transient for Timer {
         self.state = GeneratorState::Completed;
     }
     
+    async fn step(&mut self) -> Result<()> {
+        if !self.is_active() {
+            return Ok(());
+        }
+        
+        self.step_number += 1;
+        trace!("Timer {} step #{} ({}ms/{}ms)", 
+               self.id, self.step_number,
+               self.elapsed().as_millis(), 
+               self.interval.as_millis());
+        
+        if self.is_expired() {
+            debug!("Timer {} expired after {}ms", self.id, self.elapsed().as_millis());
+            self.complete().await;
+        }
+        
+        Ok(())
+    }
+    
+    async fn resume(&mut self) {
+        debug!("Timer {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        debug!("Timer {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -78,23 +107,7 @@ impl Transient for Timer {
 }
 
 #[async_trait]
-impl Steppable for Timer {
-    async fn step(&mut self) -> Result<()> {
-        if !self.is_active() {
-            return Ok(());
-        }
-        
-        self.step_number += 1;
-        trace!("Timer {} step #{}", self.id, self.step_number);
-        
-        if self.is_expired() {
-            debug!("Timer {} expired", self.id);
-            self.complete().await;
-        }
-        
-        Ok(())
-    }
-}
+impl Steppable for Timer {}
 
 #[async_trait]
 impl Generator for Timer {
@@ -114,16 +127,6 @@ impl Generator for Timer {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&())
-    }
-    
-    async fn resume(&mut self) {
-        debug!("Timer {} resuming", self.id);
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        debug!("Timer {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {

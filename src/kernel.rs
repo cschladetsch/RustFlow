@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, info, trace};
 
-use crate::flow::node::Node;
+use crate::flow::Node;
 use crate::logger::Logger;
 use crate::traits::{Generator, Steppable, Transient};
 use crate::types::{DebugLevel, GeneratorState, TimeFrame, TransientId};
@@ -167,17 +167,6 @@ impl Transient for Kernel {
         self.state = GeneratorState::Completed;
     }
     
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-    
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-}
-
-#[async_trait]
-impl Steppable for Kernel {
     async fn step(&mut self) -> Result<()> {
         self.step_time();
         
@@ -193,7 +182,28 @@ impl Steppable for Kernel {
         
         Ok(())
     }
+    
+    async fn resume(&mut self) {
+        info!("Kernel {} resuming", self.id);
+        self.state = GeneratorState::Running;
+    }
+    
+    async fn suspend(&mut self) {
+        info!("Kernel {} suspending", self.id);
+        self.state = GeneratorState::Suspended;
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+    
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }
+
+#[async_trait]
+impl Steppable for Kernel {}
 
 #[async_trait]
 impl Generator for Kernel {
@@ -209,16 +219,6 @@ impl Generator for Kernel {
     
     fn value(&self) -> Option<&Self::Output> {
         Some(&true)
-    }
-    
-    async fn resume(&mut self) {
-        info!("Kernel {} resuming", self.id);
-        self.state = GeneratorState::Running;
-    }
-    
-    async fn suspend(&mut self) {
-        info!("Kernel {} suspending", self.id);
-        self.state = GeneratorState::Suspended;
     }
     
     async fn pre(&mut self) {
