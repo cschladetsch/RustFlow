@@ -3,7 +3,7 @@ use std::any::Any;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace};
 
 use crate::traits::{Generator, Steppable, Transient};
 use crate::types::{GeneratorState, TransientId};

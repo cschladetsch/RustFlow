@@ -1,7 +1,5 @@
-use std::sync::Arc;
 use tracing::{debug, error, info, trace, warn};
 
-use crate::types::LogLevel;
 
 #[derive(Clone)]
 pub struct Logger {
