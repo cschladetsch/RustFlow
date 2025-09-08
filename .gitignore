@@ -75,3 +75,6 @@ node_modules/
 
 # Profiling data
 *.prof
+
+# Test binaries
+*_test
