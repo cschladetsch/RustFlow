@@ -1,5 +1,8 @@
 # RustFlow
 
+📖 [Docs & diagrams](https://cschladetsch.github.io/RustFlow/)
+
+
 A Rust-based coroutine and flow control system inspired by CsharpFlow, designed for both async/await and threading workloads.
 
 ## Features
